@@ -1,6 +1,19 @@
+import random
+
 class User:
     def __init__(self, name):
         self.name = name
+
+class Queue():
+    def __init__(self):
+        self.queue = []
+    def enqueue(self, value):
+        self.queue.append(value)
+    def dequeue(self):
+        if self.size() > 0:
+            return self.queue.pop(0)
+        else:
+            return len(self.queue)                  
 
 class SocialGraph:
     def __init__(self):
@@ -28,6 +41,11 @@ class SocialGraph:
         self.users[self.last_id] = User(name)
         self.friendships[self.last_id] = set()
 
+    def make_random(self, l):
+        for i in range(0, len(l)):
+            random_index = random.randint(i, len(l) - 1) 
+            l[i], l[random_index] = l[random_index], l[i]
+
     def populate_graph(self, num_users, avg_friendships):
         """
         Takes a number of users and an average number of friendships
@@ -45,8 +63,23 @@ class SocialGraph:
         # !!!! IMPLEMENT ME
 
         # Add users
+        for user in range(num_users):
+            self.add_user(user)
 
         # Create friendships
+        friendship_combos = []
+
+        for user in range(1, self.last_id + 1):
+            friendship_combos.append(user, friend)
+
+        self.make_random(friendship_combos)
+
+        total_friendships = num_users * avg_friendships
+
+        friends_to_make = friendship_combos[:(total_friendships // 2)]
+
+        for friendship in friends_to_make:
+            self.add_friendship(friendship[0], friendship[1])   
 
     def get_all_social_paths(self, user_id):
         """
@@ -59,12 +92,29 @@ class SocialGraph:
         """
         visited = {}  # Note that this is a dictionary, not a set
         # !!!! IMPLEMENT ME
+        path = [user_id]
+        q = Queue()
+        q.enqueue(path)
+
+        while q.size():
+            current_path = q.dequeue()
+
+            current_vertex = current_path[-1]
+
+            if current_vertex not in visited:
+                visited[current_vertex] = current_path
+                neighbors = self.friendships[current_vertex]
+                for neighbor in neighbors:
+                    neighbor_path = current_path[:]
+                    neighbor_path.append(neighbor)
+                    q.enqueue(neighbor_path)    
+
         return visited
 
 
 if __name__ == '__main__':
     sg = SocialGraph()
-    sg.populate_graph(10, 2)
+    sg.populate_graph(10,2)
     print(sg.friendships)
     connections = sg.get_all_social_paths(1)
     print(connections)
